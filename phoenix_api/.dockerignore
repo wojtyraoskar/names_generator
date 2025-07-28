@@ -1,0 +1,68 @@
+# =============================================================================
+# DOCKERIGNORE FILE FOR PHOENIX API
+# =============================================================================
+# This file tells Docker which files and directories to ignore when building
+# the image. This reduces build context size and improves build performance.
+
+# Git version control files
+.git
+.gitignore
+
+# Docker files (to avoid recursive copying)
+Dockerfile
+.dockerignore
+
+# Build artifacts and temporary files
+_build/
+deps/
+*.ez
+
+# Log files
+*.log
+
+# Database files
+*.db
+*.sqlite3
+
+# Environment files (these should be set via environment variables)
+.env
+.env.local
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test coverage reports
+cover/
+coverage/
+
+# Documentation
+docs/
+*.md
+
+# Temporary files
+tmp/
+temp/
+
+# Node.js files (if you have frontend assets)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Phoenix specific
+priv/static/assets/
+priv/static/cache_manifest.json 

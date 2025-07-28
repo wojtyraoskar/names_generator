@@ -1,0 +1,64 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: phoenix_api_db
+    
+    environment:
+      POSTGRES_DB: phoenix_api_prod
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    
+    ports:
+      - "5432:5432"
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: phoenix_api_web
+    
+    ports:
+      - "4000:4000"
+    
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/phoenix_api_prod
+      
+      MIX_ENV: prod
+      PORT: 4000
+      PHX_HOST: localhost
+      
+      PHX_SERVER: "true"
+      
+      SECRET_KEY_BASE: gVH9Zz7gfo2z9bDi3vMnDpEGePY6JQCot0GCeaqie/1I2Y7JR52uD8epjQDQE9WP
+      
+      POOL_SIZE: 10
+    
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local 
