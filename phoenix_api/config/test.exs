@@ -20,14 +20,16 @@ config :phoenix_api, PhoenixApiWeb.Endpoint,
   secret_key_base: "yqdfJmOgo98hzk2vWe9EaBsCEwai8M0a2c/H8mu+wfwvQhkzclkerIVA1oIs5R3E",
   server: false
 
-# In test we don't send emails
-config :phoenix_api, PhoenixApi.Mailer, adapter: Swoosh.Adapters.Test
-
-# Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Use mock HTTP client in tests
+config :phoenix_api, :http_client, HTTPClientMock
+
+config :phoenix_api,
+  adapters: %{
+    PhoenixApi.GovData.NamesBaseOnPesel => PhoenixApi.GovData.NamesBaseOnPesel.Adapter.Dummy
+  }
