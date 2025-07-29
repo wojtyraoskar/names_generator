@@ -58,4 +58,17 @@ defmodule PhoenixApi.RandomNames.Query do
   defp apply_filter(query, _, _), do: query
 
   def base_query, do: PhoenixApi.RandomNames.RandomName
+
+  def build_count_query(%Q{} = struct) do
+    __MODULE__.fields()
+    |> Enum.reject(&(&1 in [:page, :per_page]))
+    |> Enum.reduce(base_query(), fn filter, query ->
+      if struct |> get_in([Access.key(filter)]) |> PhoenixApi.Infra.empty?() do
+        query
+      else
+        query |> apply_filter(struct, filter)
+      end
+    end)
+    |> select([r], count(r.id))
+  end
 end

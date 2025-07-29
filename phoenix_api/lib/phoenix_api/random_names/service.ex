@@ -1,20 +1,16 @@
 defmodule PhoenixApi.RandomNames.Service do
   alias PhoenixApi.Repo
-  alias PhoenixApi.RandomNames.Query, as: Q
+  alias PhoenixApi.RandomNames.Query
   alias PhoenixApi.RandomNames.RandomName
-  import Ecto.Query
 
   def list_users(params) do
-    with {:ok, struct} <- Q.new(params),
-         {:ok, query} <- Q.call(struct) do
-      # Get total count for pagination metadata by applying the same filters
-      count_query = build_count_query(struct)
+    with {:ok, struct} <- Query.new(params),
+         {:ok, query} <- Query.call(struct) do
+      count_query = Query.build_count_query(struct)
       total_count = Repo.one(count_query) || 0
 
-      # Get paginated results
       results = Repo.all(query)
 
-      # Calculate pagination metadata
       page = struct.page
       per_page = struct.per_page
       total_pages = if per_page > 0, do: ceil(total_count / per_page), else: 0
@@ -79,52 +75,5 @@ defmodule PhoenixApi.RandomNames.Service do
       %Ecto.Changeset{valid?: true} = changeset -> {:ok, changeset}
       changeset -> {:error, changeset}
     end
-  end
-
-  defp build_count_query(%Q{} = struct) do
-    RandomName
-    |> filter_by_first_name(struct.first_name)
-    |> filter_by_last_name(struct.last_name)
-    |> filter_by_birthdate(struct.birthdate)
-    |> filter_by_birthdate_from(struct.birthdate_from)
-    |> filter_by_birthdate_to(struct.birthdate_to)
-    |> filter_by_gender(struct.gender)
-    |> select([r], count(r.id))
-  end
-
-  defp filter_by_first_name(query, nil), do: query
-
-  defp filter_by_first_name(query, first_name) do
-    query |> where([r], ilike(r.first_name, ^"%#{first_name}%"))
-  end
-
-  defp filter_by_last_name(query, nil), do: query
-
-  defp filter_by_last_name(query, last_name) do
-    query |> where([r], ilike(r.last_name, ^"%#{last_name}%"))
-  end
-
-  defp filter_by_birthdate(query, nil), do: query
-
-  defp filter_by_birthdate(query, birthdate) do
-    query |> where([r], r.birthdate == ^birthdate)
-  end
-
-  defp filter_by_birthdate_from(query, nil), do: query
-
-  defp filter_by_birthdate_from(query, birthdate_from) do
-    query |> where([r], r.birthdate >= ^birthdate_from)
-  end
-
-  defp filter_by_birthdate_to(query, nil), do: query
-
-  defp filter_by_birthdate_to(query, birthdate_to) do
-    query |> where([r], r.birthdate <= ^birthdate_to)
-  end
-
-  defp filter_by_gender(query, nil), do: query
-
-  defp filter_by_gender(query, gender) do
-    query |> where([r], r.gender == ^gender)
   end
 end

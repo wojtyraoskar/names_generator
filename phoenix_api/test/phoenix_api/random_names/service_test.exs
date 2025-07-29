@@ -125,10 +125,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
 
       assert length(result.data) == 3
       assert result.pagination.total_count == 3
+
       assert Enum.all?(result.data, fn name ->
-        Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
-        Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
-      end)
+               Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
+                 Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
+             end)
     end
 
     test "filters names by gender" do
@@ -186,10 +187,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
 
       assert length(result.data) == 2
       assert result.pagination.total_count == 2
+
       assert Enum.all?(result.data, fn name ->
-        Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
-        Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
-      end)
+               Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
+                 Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
+             end)
     end
 
     test "supports pagination with custom page and per_page" do
@@ -263,7 +265,7 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       assert Enum.all?(result.data, fn name -> name.gender == :male end)
     end
 
-            test "combines birthdate range filtering with pagination" do
+    test "combines birthdate range filtering with pagination" do
       # Create users with different birthdates
       for i <- 1..10 do
         year = 1990 + i
@@ -272,20 +274,22 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
 
       for i <- 1..5 do
         year = 2000 + i
-        random_name(%{first_name: "User#{i+10}", last_name: "Test", birthdate: Date.new!(year, 1, 1), gender: :male})
+        random_name(%{first_name: "User#{i + 10}", last_name: "Test", birthdate: Date.new!(year, 1, 1), gender: :male})
       end
 
-      {:ok, result} = Service.list_users(%{birthdate_from: ~D[1995-01-01], birthdate_to: ~D[1999-12-31], page: 2, per_page: 3})
+      {:ok, result} =
+        Service.list_users(%{birthdate_from: ~D[1995-01-01], birthdate_to: ~D[1999-12-31], page: 2, per_page: 3})
 
       assert length(result.data) == 2
       assert result.pagination.total_count == 5
       assert result.pagination.page == 2
       assert result.pagination.per_page == 3
       assert result.pagination.total_pages == 2
+
       assert Enum.all?(result.data, fn name ->
-        Date.compare(name.birthdate, ~D[1995-01-01]) in [:gt, :eq] and
-        Date.compare(name.birthdate, ~D[1999-12-31]) in [:lt, :eq]
-      end)
+               Date.compare(name.birthdate, ~D[1995-01-01]) in [:gt, :eq] and
+                 Date.compare(name.birthdate, ~D[1999-12-31]) in [:lt, :eq]
+             end)
     end
   end
 
