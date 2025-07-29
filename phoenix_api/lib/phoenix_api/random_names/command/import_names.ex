@@ -1,4 +1,4 @@
-defmodule PhoenixApi.Names.Command.ImportNames do
+defmodule PhoenixApi.RandomNames.Command.ImportNames do
   @moduledoc """
   TODO: Add oban worker to import names from gov data. This could fail especially if the data is not available.
   """
@@ -15,8 +15,8 @@ defmodule PhoenixApi.Names.Command.ImportNames do
          female_users <- generate_users_by_gender(female_first_names, female_last_names, "female", 100),
          male_users <- generate_users_by_gender(male_first_names, male_last_names, "male", 100),
          final_users <- Enum.take_random(female_users ++ male_users, 100),
-          # TODO: Insert should be take out from here and place in Repo for Names
-         {count, _} when is_number(count) <- Repo.insert_all(PhoenixApi.Names.Name, final_users) do
+         # TODO: Insert should be take out from here and place in Repo for Names
+         {count, _} when is_number(count) <- Repo.insert_all(PhoenixApi.RandomNames.RandomName, final_users) do
       {:ok, count}
     else
       error ->

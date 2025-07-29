@@ -2,24 +2,24 @@ defmodule PhoenixApi.Names.Command.ImportNamesTest do
   use PhoenixApi.DataCase, async: true
 
   alias PhoenixApi.Repo
-  alias PhoenixApi.Names.Command.ImportNames, as: Subject
-  alias PhoenixApi.Names.Name
+  alias PhoenixApi.RandomNames.Command.ImportNames, as: Subject
+  alias PhoenixApi.RandomNames.RandomName
 
   describe "call/0" do
     test "downloads and processes names and lastnames correctly" do
       Subject.call()
 
-      assert Repo.all(Name) |> length() == 100
+      assert Repo.all(RandomName) |> length() == 100
 
       Subject.call()
 
-      assert Repo.all(Name) |> length() == 200
+      assert Repo.all(RandomName) |> length() == 200
     end
 
     test "generates valid user data with proper structure" do
       Subject.call()
 
-      users = Repo.all(Name)
+      users = Repo.all(RandomName)
       assert length(users) == 100
 
       # Check that all users have required fields
@@ -36,7 +36,7 @@ defmodule PhoenixApi.Names.Command.ImportNamesTest do
     test "generates users with both genders" do
       Subject.call()
 
-      users = Repo.all(Name)
+      users = Repo.all(RandomName)
       male_count = Enum.count(users, &(&1.gender == :male))
       female_count = Enum.count(users, &(&1.gender == :female))
 
@@ -44,7 +44,6 @@ defmodule PhoenixApi.Names.Command.ImportNamesTest do
       assert female_count > 0, "Should generate some female users"
       assert male_count + female_count == 100
     end
-
   end
 
   describe "generate_users_by_gender/4" do
@@ -84,6 +83,7 @@ defmodule PhoenixApi.Names.Command.ImportNamesTest do
       users = Subject.generate_users_by_gender(first_names, last_names, gender, count)
 
       assert length(users) == count
+
       for user <- users do
         assert user.first_name == "Alice"
         assert user.last_name == "Smith"

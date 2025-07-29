@@ -1,4 +1,4 @@
-defmodule PhoenixApi.Names.Name do
+defmodule PhoenixApi.RandomNames.RandomName do
   use Ecto.Schema
   import Ecto.Changeset
 
