@@ -3,6 +3,7 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
 
   alias PhoenixApi.RandomNames.Service
   import PhoenixApi.Fixtures
+  alias PhoenixApi.Repo
 
   describe "list_users/1" do
     test "returns empty list when no names exist" do
@@ -290,6 +291,101 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
                Date.compare(name.birthdate, ~D[1995-01-01]) in [:gt, :eq] and
                  Date.compare(name.birthdate, ~D[1999-12-31]) in [:lt, :eq]
              end)
+    end
+
+    test "returns users with pagination" do
+      # Create some test users
+      user1 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "Alice",
+        last_name: "Smith",
+        birthdate: ~D[1990-01-01],
+        gender: :female
+      }
+
+      user2 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "Bob",
+        last_name: "Johnson",
+        birthdate: ~D[1985-05-15],
+        gender: :male
+      }
+
+      user3 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "Charlie",
+        last_name: "Brown",
+        birthdate: ~D[1995-12-25],
+        gender: :male
+      }
+
+      # Insert users
+      {:ok, _} = Repo.insert(user1)
+      {:ok, _} = Repo.insert(user2)
+      {:ok, _} = Repo.insert(user3)
+
+      # Test sorting by first_name ascending
+      {:ok, result} = Service.list_users(%{"sort" => "first_name", "page" => 1, "per_page" => 10})
+
+      assert length(result.data) == 3
+      assert hd(result.data).first_name == "Alice"
+      assert List.last(result.data).first_name == "Charlie"
+
+      # Test sorting by first_name descending
+      {:ok, result_desc} = Service.list_users(%{"sort" => "-first_name", "page" => 1, "per_page" => 10})
+
+      assert length(result_desc.data) == 3
+      assert hd(result_desc.data).first_name == "Charlie"
+      assert List.last(result_desc.data).first_name == "Alice"
+
+      # Test sorting by last_name ascending
+      {:ok, result_last_name} = Service.list_users(%{"sort" => "last_name", "page" => 1, "per_page" => 10})
+
+      assert length(result_last_name.data) == 3
+      assert hd(result_last_name.data).last_name == "Brown"
+      assert List.last(result_last_name.data).last_name == "Smith"
+    end
+
+    test "handles multiple sort fields" do
+      # Create test users with same first name but different last names
+      user1 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "John",
+        last_name: "Adams",
+        birthdate: ~D[1990-01-01],
+        gender: :male
+      }
+
+      user2 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "John",
+        last_name: "Brown",
+        birthdate: ~D[1985-05-15],
+        gender: :male
+      }
+
+      user3 = %PhoenixApi.RandomNames.RandomName{
+        first_name: "John",
+        last_name: "Wilson",
+        birthdate: ~D[1995-12-25],
+        gender: :male
+      }
+
+      # Insert users
+      {:ok, _} = Repo.insert(user1)
+      {:ok, _} = Repo.insert(user2)
+      {:ok, _} = Repo.insert(user3)
+
+      # Test sorting by first_name, then last_name
+      {:ok, result} = Service.list_users(%{"sort" => "first_name,last_name", "page" => 1, "per_page" => 10})
+
+      assert length(result.data) == 3
+      assert hd(result.data).last_name == "Adams"
+      assert List.last(result.data).last_name == "Wilson"
+    end
+
+    test "handles invalid sort fields gracefully" do
+      # Test with invalid sort field
+      {:ok, result} = Service.list_users(%{"sort" => "invalid_field", "page" => 1, "per_page" => 10})
+
+      # Should still return results (defaults to id sorting)
+      assert is_list(result.data)
+      assert is_map(result.pagination)
     end
   end
 
