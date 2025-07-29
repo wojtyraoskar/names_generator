@@ -18,7 +18,7 @@
                     <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
                 </div>
                 <div class="card-body">
-                    {{ form_start(filterForm, {'attr': {'class': 'row g-3'}}) }}
+                    {{ form_start(filterForm, {'attr': {'class': 'row g-3'}, 'method': 'GET'}) }}
                         <div class="col-md-3">
                             {{ form_row(filterForm.firstName, {'attr': {'class': 'form-control'}}) }}
                         </div>
@@ -38,7 +38,7 @@
                             <button type="submit" class="btn btn-primary me-2">
                                 <i class="fas fa-search me-1"></i>Filter
                             </button>
-                            <a href="{{ path('app_user_index') }}" class="btn btn-secondary">
+                            <a href="{{ path('app_user_index', queryParams|filter((key, value) => key not in ['firstName', 'lastName', 'gender', 'birthdateFrom', 'birthdateTo'])) }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
