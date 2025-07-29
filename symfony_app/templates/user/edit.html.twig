@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit User{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit User</h3>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_row(form.firstName, {
+                                    'attr': {
+                                        'class': 'form-control',
+                                        'placeholder': 'Enter first name...'
+                                    }
+                                }) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.lastName, {
+                                    'attr': {
+                                        'class': 'form-control',
+                                        'placeholder': 'Enter last name...'
+                                    }
+                                }) }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                {{ form_row(form.birthdate, {
+                                    'attr': {
+                                        'class': 'form-control'
+                                    }
+                                }) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_row(form.gender, {
+                                    'attr': {
+                                        'class': 'form-control'
+                                    }
+                                }) }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ path('app_user_show', {'id': user.id}) }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Details
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Update User
+                            </button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 
