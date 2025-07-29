@@ -5,6 +5,8 @@ defmodule PhoenixApi.RandomNames.Query do
     field :first_name, :string
     field :last_name, :string
     field :birthdate, :date
+    field :birthdate_from, :date
+    field :birthdate_to, :date
     field :gender, Ecto.Enum, values: [:male, :female]
     field :page, :integer, default: 1
     field :per_page, :integer, default: 20
@@ -23,6 +25,16 @@ defmodule PhoenixApi.RandomNames.Query do
   defp apply_filter(query, %Q{birthdate: value}, :birthdate) do
     query
     |> where([r0], r0.birthdate == ^value)
+  end
+
+  defp apply_filter(query, %Q{birthdate_from: value}, :birthdate_from) do
+    query
+    |> where([r0], r0.birthdate >= ^value)
+  end
+
+  defp apply_filter(query, %Q{birthdate_to: value}, :birthdate_to) do
+    query
+    |> where([r0], r0.birthdate <= ^value)
   end
 
   defp apply_filter(query, %Q{gender: value}, :gender) do

@@ -86,6 +86,8 @@ defmodule PhoenixApi.RandomNames.Service do
     |> filter_by_first_name(struct.first_name)
     |> filter_by_last_name(struct.last_name)
     |> filter_by_birthdate(struct.birthdate)
+    |> filter_by_birthdate_from(struct.birthdate_from)
+    |> filter_by_birthdate_to(struct.birthdate_to)
     |> filter_by_gender(struct.gender)
     |> select([r], count(r.id))
   end
@@ -106,6 +108,18 @@ defmodule PhoenixApi.RandomNames.Service do
 
   defp filter_by_birthdate(query, birthdate) do
     query |> where([r], r.birthdate == ^birthdate)
+  end
+
+  defp filter_by_birthdate_from(query, nil), do: query
+
+  defp filter_by_birthdate_from(query, birthdate_from) do
+    query |> where([r], r.birthdate >= ^birthdate_from)
+  end
+
+  defp filter_by_birthdate_to(query, nil), do: query
+
+  defp filter_by_birthdate_to(query, birthdate_to) do
+    query |> where([r], r.birthdate <= ^birthdate_to)
   end
 
   defp filter_by_gender(query, nil), do: query

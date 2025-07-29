@@ -72,6 +72,65 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       assert Enum.all?(result.data, fn name -> name.birthdate == date1 end)
     end
 
+    test "filters names by birthdate_from" do
+      date1 = ~D[1990-01-15]
+      date2 = ~D[1995-03-20]
+      date3 = ~D[2000-06-10]
+      date4 = ~D[1985-12-25]
+
+      _name1 = random_name(%{first_name: "John", last_name: "Doe", birthdate: date1, gender: :male})
+      _name2 = random_name(%{first_name: "Jane", last_name: "Smith", birthdate: date2, gender: :female})
+      _name3 = random_name(%{first_name: "Bob", last_name: "Brown", birthdate: date3, gender: :male})
+      _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", birthdate: date4, gender: :female})
+
+      {:ok, result} = Service.list_users(%{birthdate_from: ~D[1990-01-01]})
+
+      assert length(result.data) == 3
+      assert result.pagination.total_count == 3
+      assert Enum.all?(result.data, fn name -> Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] end)
+    end
+
+    test "filters names by birthdate_to" do
+      date1 = ~D[1990-01-15]
+      date2 = ~D[1995-03-20]
+      date3 = ~D[2000-06-10]
+      date4 = ~D[1985-12-25]
+
+      _name1 = random_name(%{first_name: "John", last_name: "Doe", birthdate: date1, gender: :male})
+      _name2 = random_name(%{first_name: "Jane", last_name: "Smith", birthdate: date2, gender: :female})
+      _name3 = random_name(%{first_name: "Bob", last_name: "Brown", birthdate: date3, gender: :male})
+      _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", birthdate: date4, gender: :female})
+
+      {:ok, result} = Service.list_users(%{birthdate_to: ~D[1995-12-31]})
+
+      assert length(result.data) == 3
+      assert result.pagination.total_count == 3
+      assert Enum.all?(result.data, fn name -> Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq] end)
+    end
+
+    test "filters names by birthdate range (from and to)" do
+      date1 = ~D[1990-01-15]
+      date2 = ~D[1995-03-20]
+      date3 = ~D[2000-06-10]
+      date4 = ~D[1985-12-25]
+      date5 = ~D[1992-08-15]
+
+      _name1 = random_name(%{first_name: "John", last_name: "Doe", birthdate: date1, gender: :male})
+      _name2 = random_name(%{first_name: "Jane", last_name: "Smith", birthdate: date2, gender: :female})
+      _name3 = random_name(%{first_name: "Bob", last_name: "Brown", birthdate: date3, gender: :male})
+      _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", birthdate: date4, gender: :female})
+      _name5 = random_name(%{first_name: "Charlie", last_name: "Wilson", birthdate: date5, gender: :male})
+
+      {:ok, result} = Service.list_users(%{birthdate_from: ~D[1990-01-01], birthdate_to: ~D[1995-12-31]})
+
+      assert length(result.data) == 3
+      assert result.pagination.total_count == 3
+      assert Enum.all?(result.data, fn name ->
+        Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
+        Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
+      end)
+    end
+
     test "filters names by gender" do
       _name1 = random_name(%{first_name: "John", last_name: "Doe", gender: :male})
       _name2 = random_name(%{first_name: "Jane", last_name: "Smith", gender: :female})
@@ -112,6 +171,25 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       assert length(result.data) == 2
       assert result.pagination.total_count == 2
       assert Enum.all?(result.data, fn name -> String.contains?(String.downcase(name.last_name), "doe") end)
+    end
+
+    test "filters names using string keys for birthdate range" do
+      date1 = ~D[1990-01-15]
+      date2 = ~D[1995-03-20]
+      date3 = ~D[2000-06-10]
+
+      _name1 = random_name(%{first_name: "John", last_name: "Doe", birthdate: date1, gender: :male})
+      _name2 = random_name(%{first_name: "Jane", last_name: "Smith", birthdate: date2, gender: :female})
+      _name3 = random_name(%{first_name: "Bob", last_name: "Brown", birthdate: date3, gender: :male})
+
+      {:ok, result} = Service.list_users(%{"birthdate_from" => "1990-01-01", "birthdate_to" => "1995-12-31"})
+
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name ->
+        Date.compare(name.birthdate, ~D[1990-01-01]) in [:gt, :eq] and
+        Date.compare(name.birthdate, ~D[1995-12-31]) in [:lt, :eq]
+      end)
     end
 
     test "supports pagination with custom page and per_page" do
@@ -183,6 +261,31 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       assert result.pagination.per_page == 3
       assert result.pagination.total_pages == 4
       assert Enum.all?(result.data, fn name -> name.gender == :male end)
+    end
+
+            test "combines birthdate range filtering with pagination" do
+      # Create users with different birthdates
+      for i <- 1..10 do
+        year = 1990 + i
+        random_name(%{first_name: "User#{i}", last_name: "Test", birthdate: Date.new!(year, 1, 1), gender: :male})
+      end
+
+      for i <- 1..5 do
+        year = 2000 + i
+        random_name(%{first_name: "User#{i+10}", last_name: "Test", birthdate: Date.new!(year, 1, 1), gender: :male})
+      end
+
+      {:ok, result} = Service.list_users(%{birthdate_from: ~D[1995-01-01], birthdate_to: ~D[1999-12-31], page: 2, per_page: 3})
+
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 5
+      assert result.pagination.page == 2
+      assert result.pagination.per_page == 3
+      assert result.pagination.total_pages == 2
+      assert Enum.all?(result.data, fn name ->
+        Date.compare(name.birthdate, ~D[1995-01-01]) in [:gt, :eq] and
+        Date.compare(name.birthdate, ~D[1999-12-31]) in [:lt, :eq]
+      end)
     end
   end
 
