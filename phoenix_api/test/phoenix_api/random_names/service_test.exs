@@ -6,19 +6,28 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
 
   describe "list_users/1" do
     test "returns empty list when no names exist" do
-      result = Service.list_users(%{})
-      assert result == []
+      {:ok, result} = Service.list_users(%{})
+      assert result.data == []
+      assert result.pagination.total_count == 0
+      assert result.pagination.page == 1
+      assert result.pagination.per_page == 20
     end
 
     test "returns all names when no filters provided" do
       _name1 = random_name(%{first_name: "John", last_name: "Doe", gender: :male})
       _name2 = random_name(%{first_name: "Jane", last_name: "Smith", gender: :female})
 
-      result = Service.list_users(%{})
+      {:ok, result} = Service.list_users(%{})
 
-      assert length(result) == 2
-      assert Enum.any?(result, fn name -> name.first_name == "John" end)
-      assert Enum.any?(result, fn name -> name.first_name == "Jane" end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert result.pagination.page == 1
+      assert result.pagination.per_page == 20
+      assert result.pagination.total_pages == 1
+      assert result.pagination.has_next == false
+      assert result.pagination.has_prev == false
+      assert Enum.any?(result.data, fn name -> name.first_name == "John" end)
+      assert Enum.any?(result.data, fn name -> name.first_name == "Jane" end)
     end
 
     test "filters names by last_name with ilike search" do
@@ -27,10 +36,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name3 = random_name(%{first_name: "Bob", last_name: "Doe", gender: :male})
       _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", gender: :female})
 
-      result = Service.list_users(%{last_name: "doe"})
+      {:ok, result} = Service.list_users(%{last_name: "doe"})
 
-      assert length(result) == 2
-      assert Enum.all?(result, fn name -> String.contains?(String.downcase(name.last_name), "doe") end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name -> String.contains?(String.downcase(name.last_name), "doe") end)
     end
 
     test "filters names by first_name with ilike search" do
@@ -39,10 +49,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name3 = random_name(%{first_name: "Johnson", last_name: "Brown", gender: :male})
       _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", gender: :female})
 
-      result = Service.list_users(%{first_name: "john"})
+      {:ok, result} = Service.list_users(%{first_name: "john"})
 
-      assert length(result) == 2
-      assert Enum.all?(result, fn name -> String.contains?(String.downcase(name.first_name), "john") end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name -> String.contains?(String.downcase(name.first_name), "john") end)
     end
 
     test "filters names by birthdate" do
@@ -54,10 +65,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name2 = random_name(%{first_name: "Jane", last_name: "Smith", birthdate: date2, gender: :female})
       _name3 = random_name(%{first_name: "Bob", last_name: "Brown", birthdate: date3, gender: :male})
 
-      result = Service.list_users(%{birthdate: date1})
+      {:ok, result} = Service.list_users(%{birthdate: date1})
 
-      assert length(result) == 2
-      assert Enum.all?(result, fn name -> name.birthdate == date1 end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name -> name.birthdate == date1 end)
     end
 
     test "filters names by gender" do
@@ -66,10 +78,11 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name3 = random_name(%{first_name: "Bob", last_name: "Brown", gender: :male})
       _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", gender: :female})
 
-      result = Service.list_users(%{gender: :male})
+      {:ok, result} = Service.list_users(%{gender: :male})
 
-      assert length(result) == 2
-      assert Enum.all?(result, fn name -> name.gender == :male end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name -> name.gender == :male end)
     end
 
     test "filters names by combination of first_name and gender" do
@@ -79,11 +92,12 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name4 = random_name(%{first_name: "Alice", last_name: "Johnson", gender: :female})
       _name5 = random_name(%{first_name: "Johnny", last_name: "Wilson", gender: :male})
 
-      result = Service.list_users(%{first_name: "john", gender: :male})
+      {:ok, result} = Service.list_users(%{first_name: "john", gender: :male})
 
-      assert length(result) == 3
+      assert length(result.data) == 3
+      assert result.pagination.total_count == 3
 
-      assert Enum.all?(result, fn name ->
+      assert Enum.all?(result.data, fn name ->
                String.contains?(String.downcase(name.first_name), "john") and name.gender == :male
              end)
     end
@@ -93,10 +107,82 @@ defmodule PhoenixApi.RandomNames.ServiceTest do
       _name2 = random_name(%{first_name: "Jane", last_name: "Smith", gender: :female})
       _name3 = random_name(%{first_name: "Bob", last_name: "Doe", gender: :male})
 
-      result = Service.list_users(%{"last_name" => "doe"})
+      {:ok, result} = Service.list_users(%{"last_name" => "doe"})
 
-      assert length(result) == 2
-      assert Enum.all?(result, fn name -> String.contains?(String.downcase(name.last_name), "doe") end)
+      assert length(result.data) == 2
+      assert result.pagination.total_count == 2
+      assert Enum.all?(result.data, fn name -> String.contains?(String.downcase(name.last_name), "doe") end)
+    end
+
+    test "supports pagination with custom page and per_page" do
+      # Create 25 users to test pagination
+      for i <- 1..25 do
+        random_name(%{first_name: "User#{i}", last_name: "Test#{i}", gender: :male})
+      end
+
+      {:ok, result} = Service.list_users(%{page: 2, per_page: 10})
+
+      assert length(result.data) == 10
+      assert result.pagination.page == 2
+      assert result.pagination.per_page == 10
+      assert result.pagination.total_count == 25
+      assert result.pagination.total_pages == 3
+      assert result.pagination.has_next == true
+      assert result.pagination.has_prev == true
+    end
+
+    test "handles pagination on first page" do
+      # Create 15 users
+      for i <- 1..15 do
+        random_name(%{first_name: "User#{i}", last_name: "Test#{i}", gender: :male})
+      end
+
+      {:ok, result} = Service.list_users(%{page: 1, per_page: 10})
+
+      assert length(result.data) == 10
+      assert result.pagination.page == 1
+      assert result.pagination.per_page == 10
+      assert result.pagination.total_count == 15
+      assert result.pagination.total_pages == 2
+      assert result.pagination.has_next == true
+      assert result.pagination.has_prev == false
+    end
+
+    test "handles pagination on last page" do
+      # Create 15 users
+      for i <- 1..15 do
+        random_name(%{first_name: "User#{i}", last_name: "Test#{i}", gender: :male})
+      end
+
+      {:ok, result} = Service.list_users(%{page: 2, per_page: 10})
+
+      assert length(result.data) == 5
+      assert result.pagination.page == 2
+      assert result.pagination.per_page == 10
+      assert result.pagination.total_count == 15
+      assert result.pagination.total_pages == 2
+      assert result.pagination.has_next == false
+      assert result.pagination.has_prev == true
+    end
+
+    test "combines pagination with filters" do
+      # Create users with different genders
+      for i <- 1..10 do
+        random_name(%{first_name: "Male#{i}", last_name: "Test", gender: :male})
+      end
+
+      for i <- 1..5 do
+        random_name(%{first_name: "Female#{i}", last_name: "Test", gender: :female})
+      end
+
+      {:ok, result} = Service.list_users(%{gender: :male, page: 2, per_page: 3})
+
+      assert length(result.data) == 3
+      assert result.pagination.total_count == 10
+      assert result.pagination.page == 2
+      assert result.pagination.per_page == 3
+      assert result.pagination.total_pages == 4
+      assert Enum.all?(result.data, fn name -> name.gender == :male end)
     end
   end
 

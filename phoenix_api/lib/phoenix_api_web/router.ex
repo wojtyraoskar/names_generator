@@ -9,6 +9,9 @@ defmodule PhoenixApiWeb.Router do
     pipe_through :api
 
     get "/health", HealthController, :index
+
+    # Random Names API endpoints
+    resources "/users", RandomNamesController, only: [:index, :show, :create, :update, :delete]
   end
 
   if Application.compile_env(:phoenix_api, :dev_routes) do

@@ -6,6 +6,8 @@ defmodule PhoenixApi.RandomNames.Query do
     field :last_name, :string
     field :birthdate, :date
     field :gender, Ecto.Enum, values: [:male, :female]
+    field :page, :integer, default: 1
+    field :per_page, :integer, default: 20
   end
 
   defp apply_filter(query, %Q{first_name: value}, :first_name) do
@@ -26,6 +28,19 @@ defmodule PhoenixApi.RandomNames.Query do
   defp apply_filter(query, %Q{gender: value}, :gender) do
     query
     |> where([r0], r0.gender == ^value)
+  end
+
+  defp apply_filter(query, %Q{page: page, per_page: per_page}, :page) do
+    offset = (page - 1) * per_page
+
+    query
+    |> limit(^per_page)
+    |> offset(^offset)
+  end
+
+  defp apply_filter(query, %Q{per_page: _per_page}, :per_page) do
+    # per_page is handled in the page filter
+    query
   end
 
   defp apply_filter(query, _, _), do: query
