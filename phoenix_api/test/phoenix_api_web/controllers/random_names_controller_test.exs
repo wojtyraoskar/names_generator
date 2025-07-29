@@ -101,4 +101,15 @@ defmodule PhoenixApiWeb.RandomNamesControllerTest do
       assert response(conn, 204)
     end
   end
+
+  describe "import" do
+    test "POST /api/import successfully imports names", %{conn: conn} do
+      conn = post(conn, ~p"/api/import")
+
+      response = json_response(conn, 201)
+      assert response["message"] =~ "Successfully imported"
+      assert is_integer(response["count"])
+      assert response["count"] > 0
+    end
+  end
 end

@@ -12,6 +12,7 @@ defmodule PhoenixApiWeb.Router do
 
     # Random Names API endpoints
     resources "/users", RandomNamesController, only: [:index, :show, :create, :update, :delete]
+    post "/import", RandomNamesController, :import
   end
 
   if Application.compile_env(:phoenix_api, :dev_routes) do

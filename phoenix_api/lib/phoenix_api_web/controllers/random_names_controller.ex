@@ -2,6 +2,7 @@ defmodule PhoenixApiWeb.RandomNamesController do
   use PhoenixApiWeb, :controller
 
   alias PhoenixApi.RandomNames.Service
+  alias PhoenixApi.RandomNames.Command.ImportNames
 
   action_fallback PhoenixApiWeb.FallbackController
 
@@ -46,6 +47,14 @@ defmodule PhoenixApiWeb.RandomNamesController do
       conn
       |> put_status(:no_content)
       |> send_resp(204, "")
+    end
+  end
+
+  def import(conn, _params) do
+    with {:ok, count} <- ImportNames.call() do
+      conn
+      |> put_status(:created)
+      |> json(%{message: "Successfully imported #{count} names", count: count})
     end
   end
 end
