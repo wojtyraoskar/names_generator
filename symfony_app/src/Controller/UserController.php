@@ -89,6 +89,23 @@ class UserController extends AbstractController
         ]);
     }
 
+    #[Route('/import', name: 'app_user_import', methods: ['POST'])]
+    public function import(): Response
+    {
+        try {
+            $result = $this->apiService->import();
+            if ($result) {
+                $this->addFlash('success', $result['message'] ?? 'Import completed successfully!');
+            } else {
+                $this->addFlash('error', 'Import failed. Please try again.');
+            }
+        } catch (\Throwable) {
+            $this->addFlash('error', 'API connection failed. Please ensure the Phoenix API is running.');
+        }
+
+        return $this->redirectToRoute('app_user_index');
+    }
+
     #[Route('/{id}', name: 'app_user_show', methods: ['GET'])]
     public function show(int $id): Response
     {

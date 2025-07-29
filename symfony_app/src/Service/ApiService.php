@@ -86,4 +86,15 @@ class ApiService
             return false;
         }
     }
+
+    public function import(): ?array
+    {
+        try {
+            $response = $this->httpClient->request('POST', self::API_BASE_URL . '/import');
+            $data = json_decode($response->getContent(), true);
+            return $data;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 } 
