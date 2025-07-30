@@ -2,6 +2,7 @@ defmodule PhoenixApiWeb.Router do
   use PhoenixApiWeb, :router
 
   pipeline :api do
+    # add plug for auth eatche for user token of api key
     plug :accepts, ["json"]
   end
 

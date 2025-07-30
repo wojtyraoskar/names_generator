@@ -2,6 +2,8 @@ defmodule PhoenixApi.RandomNames.RandomName do
   use Ecto.Schema
   import Ecto.Changeset
 
+  # TODO: This could be UUID
+
   @derive {Jason.Encoder, only: [:id, :first_name, :last_name, :birthdate, :gender, :inserted_at, :updated_at]}
   schema "names" do
     field :first_name, :string

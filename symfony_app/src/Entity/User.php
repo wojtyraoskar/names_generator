@@ -2,41 +2,29 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 100)]
     private ?string $firstName = null;
 
-    #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 100)]
     private ?string $lastName = null;
 
-    #[ORM\Column(type: 'date')]
     #[Assert\NotNull]
     private ?\DateTimeInterface $birthdate = null;
 
-    #[ORM\Column(length: 10)]
     #[Assert\NotBlank]
     #[Assert\Choice(choices: ['male', 'female'])]
     private ?string $gender = null;
 
-    #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function __construct()

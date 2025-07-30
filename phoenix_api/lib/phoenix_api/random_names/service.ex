@@ -18,6 +18,7 @@ defmodule PhoenixApi.RandomNames.Service do
       {:ok,
        %{
          data: results,
+         #  TODO: Create object for pagination + move pagination to infra
          pagination: %{
            page: page,
            per_page: per_page,
