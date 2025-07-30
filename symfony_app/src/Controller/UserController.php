@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends AbstractController
 {
     public function __construct(private readonly ApiService $apiService) {}
-
+    // TODO: Make sure that in url we have only used filters, add debounce to filter
     #[Route('/', name: 'app_user_index', methods: ['GET'])]
     public function index(Request $request): Response
     {
@@ -88,7 +88,7 @@ class UserController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
-
+    // TODO: This could be async call
     #[Route('/import', name: 'app_user_import', methods: ['POST'])]
     public function import(): Response
     {
