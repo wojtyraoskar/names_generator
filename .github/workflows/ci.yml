@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test-php:
+    name: PHP Tests (Symfony)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: symfony_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql
+        coverage: none
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+      working-directory: ./symfony_app
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+      working-directory: ./symfony_app
+
+    - name: Create .env.local for testing
+      run: |
+        cp .env .env.local
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/symfony_test?serverVersion=15&charset=utf8" >> .env.local
+        echo "APP_ENV=test" >> .env.local
+      working-directory: ./symfony_app
+
+    - name: Clear cache
+      run: php bin/console cache:clear --env=test
+      working-directory: ./symfony_app
+
+    - name: Run database migrations
+      run: php bin/console doctrine:migrations:migrate --no-interaction --env=test
+      working-directory: ./symfony_app
+
+    - name: Run PHP tests
+      run: php bin/phpunit
+      working-directory: ./symfony_app
+
+  test-elixir:
+    name: Elixir Tests (Phoenix)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: phoenix_api_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: '1.18.0'
+        otp-version: '26.0'
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-mix-
+
+    - name: Install dependencies
+      run: mix deps.get
+      working-directory: ./phoenix_api
+
+    - name: Create test database
+      run: mix ecto.create
+      working-directory: ./phoenix_api
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/phoenix_api_test
+
+    - name: Run database migrations
+      run: mix ecto.migrate
+      working-directory: ./phoenix_api
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/phoenix_api_test
+
+    - name: Run Elixir tests
+      run: mix test
+      working-directory: ./phoenix_api
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/phoenix_api_test
+
+  lint-php:
+    name: PHP Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.1'
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+      working-directory: ./symfony_app
+
+    - name: Run PHP syntax check
+      run: find src -name "*.php" -exec php -l {} \;
+      working-directory: ./symfony_app
+
+  lint-elixir:
+    name: Elixir Linting
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: '1.18.0'
+        otp-version: '26.0'
+
+    - name: Install dependencies
+      run: mix deps.get
+      working-directory: ./phoenix_api
+
+    - name: Run Elixir formatter check
+      run: mix format --check-formatted
+      working-directory: ./phoenix_api
+
+    - name: Run Elixir credo check
+      run: mix credo --strict
+      working-directory: ./phoenix_api
+      continue-on-error: true 

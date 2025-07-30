@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ApiService
 {
-    private const API_BASE_URL = 'http://localhost:4000/api';
+    private const API_BASE_URL = 'http://host.docker.internal:4000/api';
 
     public function __construct(
         private HttpClientInterface $httpClient

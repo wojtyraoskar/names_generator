@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine AS builder
+FROM php:8.3-fpm-alpine AS builder
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -43,7 +43,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts && \
 # Clear cache and warm up
 RUN php bin/console cache:clear --env=prod --no-debug
 
-FROM php:8.2-fpm-alpine AS app
+FROM php:8.3-fpm-alpine AS app
 
 # Install runtime dependencies
 RUN apk add --no-cache \
